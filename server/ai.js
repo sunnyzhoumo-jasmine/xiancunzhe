@@ -7,6 +7,10 @@ export function aiEnabled() {
   return Boolean(API_KEY);
 }
 
+export function aiStatus() {
+  return { enabled: Boolean(API_KEY), model: MODEL, baseUrl: BASE_URL };
+}
+
 async function chat(system, user, { json = false } = {}) {
   if (!API_KEY) return null;
   const body = {
@@ -18,12 +22,19 @@ async function chat(system, user, { json = false } = {}) {
     temperature: 0.2,
   };
   if (json) body.response_format = { type: 'json_object' };
-  const res = await fetch(`${BASE_URL}/chat/completions`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${API_KEY}` },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`AI API ${res.status}`);
+  let res;
+  let errorDetail = '';
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    res = await fetch(`${BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${API_KEY}` },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) break;
+    errorDetail = (await res.text()).slice(0, 240).replace(/\s+/g, ' ');
+    if (res.status < 500 || attempt === 1) throw new Error(`AI API ${res.status}${errorDetail ? `: ${errorDetail}` : ''}`);
+    await new Promise((resolve) => setTimeout(resolve, 800));
+  }
   const data = await res.json();
   const content = data.choices?.[0]?.message?.content;
   if (!content) throw new Error('AI 空响应');

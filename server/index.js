@@ -3,6 +3,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { handleApi } from './routes.js';
+import { aiStatus } from './ai.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = join(__dirname, '..', 'public');
@@ -76,7 +77,9 @@ if (isMain) {
       const lan = process.env.HOST_URL || '';
       if (lan) console.log(`  局域网/远程：${lan}`);
       console.log(`  数据库：data/app.db\n`);
-      if (!process.env.OPENAI_API_KEY) {
+      const ai = aiStatus();
+      console.log(`  AI 模式：${ai.enabled ? `已启用（${ai.model}）` : '未启用（规则模式）'}`);
+      if (!ai.enabled) {
         console.log('  提示：未配置 OPENAI_API_KEY，AI 摘要/搜索回答将使用规则模式（可后续配置启用）。\n');
       }
     });

@@ -2,6 +2,12 @@
 const app = document.getElementById('app');
 const toastEl = document.getElementById('toast');
 const NAV_ICON = (d) => `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const BRAND_MARK = `<svg class="brand-mark" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+  <rect x="11" y="16" width="37" height="39" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="3" transform="rotate(-7 29.5 35.5)"/>
+  <rect x="18" y="9" width="37" height="39" rx="8" fill="#fff" stroke="#2563eb" stroke-width="3"/>
+  <path d="M28 21h16M28 28h12M28 35h7" stroke="#93c5fd" stroke-width="3" stroke-linecap="round"/>
+  <path d="M46 39v11l-5-3.5-5 3.5V39" fill="#f59e0b" stroke="#d97706" stroke-width="2.5" stroke-linejoin="round"/>
+</svg>`;
 const NAV = [
   { hash: '#/review', label: '回顾', icon: NAV_ICON('<path d="M3 12a9 9 0 1 1 2.6 6.4L3 16"/><path d="M3 21v-5h5"/>') },
   { hash: '#/kb', label: '知识库', icon: NAV_ICON('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/>') },
@@ -44,6 +50,11 @@ function shortDate(iso) {
   if (!iso) return '';
   const d = new Date(iso);
   return `${d.getMonth() + 1}月${d.getDate()}日`;
+}
+
+function todayLabel() {
+  const d = new Date();
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
 }
 
 function statusBadge(s) {
@@ -158,7 +169,7 @@ function viewLogin() {
   return `
   <div class="login-wrap">
     <div class="login-logo">
-      <div class="icon">🌱</div>
+      <div class="icon">${BRAND_MARK}</div>
       <h1>先存着</h1>
       <p>把值得记住的内容放进来，之后真的记住它</p>
     </div>
@@ -171,6 +182,9 @@ function viewLogin() {
       <div class="field"><label>密码</label><input class="input" id="lg-password" type="password" placeholder="至少 6 位" autocomplete="current-password"></div>
       <div class="field" id="lg-nick-wrap" style="display:none"><label>昵称（可选）</label><input class="input" id="lg-nick" placeholder="怎么称呼你"></div>
       <button class="btn" id="lg-submit">进入先存着</button>
+      <div class="login-divider"><span>或</span></div>
+      <button class="btn ghost guest-btn" id="lg-guest">跳过登录，先体验一下</button>
+      <p class="guest-tip">无需注册，体验数据与正式账号分开保存。</p>
       <p class="muted mt16" style="text-align:center">数据仅保存在你自己的设备/服务器上，默认私密。</p>
     </div>
   </div>`;
@@ -193,8 +207,21 @@ function bindLogin() {
       const r = await api(mode === 'register' ? '/auth/register' : '/auth/login', { method: 'POST', body: { account, password, nickname: nick } });
       me = r.user;
       location.hash = '#/collections';
-      toast(mode === 'register' ? '欢迎来到先存着 🌱' : '欢迎回来');
+      toast(mode === 'register' ? '欢迎来到先存着' : '欢迎回来');
     } catch (e) { toast(e.message); }
+  });
+  document.getElementById('lg-guest').addEventListener('click', async (e) => {
+    const button = e.currentTarget;
+    button.disabled = true;
+    try {
+      const r = await api('/auth/guest', { method: 'POST' });
+      me = r.user;
+      location.hash = '#/review';
+      toast('已进入体验模式');
+    } catch (err) {
+      toast(err.message);
+      button.disabled = false;
+    }
   });
 }
 
@@ -251,8 +278,8 @@ async function kbContentView(params, seg) {
     </div>
   </div>
   <div class="list-wrap">
-    <div class="list-card">
-      ${r.items.length ? r.items.map((c) => kbItemHtml(c)).join('') : `<div class="empty" style="padding:28px">还没有内容<br><button class="btn" data-hash="#/add">添加第一条</button></div>`}
+    <div class="list-card${r.items.length ? '' : ' kb-empty-card'}">
+      ${r.items.length ? r.items.map((c) => kbItemHtml(c)).join('') : `<div class="empty kb-empty"><span class="kb-empty-title">还没有内容</span><button class="btn kb-empty-action" data-hash="#/add">添加第一条</button></div>`}
     </div>
   </div>
   ${bottomNav()}`;
@@ -627,7 +654,7 @@ async function viewAdd() {
   </div>
   <div class="section-title">最近添加</div>
   <div class="list-wrap"><div class="list-card recent-list">
-    ${recent.length ? recent.map((c) => itemHtml(c, { noCover: true })).join('') : `<div class="empty" style="padding:20px"><span class="big">🌱</span>还没有收藏</div>`}
+    ${recent.length ? recent.map((c) => itemHtml(c, { noCover: true })).join('') : `<div class="empty empty-brand" style="padding:20px"><span class="empty-mark">${BRAND_MARK}</span>还没有收藏</div>`}
   </div></div>
   ${bottomNav()}`;
 }
@@ -651,7 +678,7 @@ function bindAdd() {
         location.hash = `#/detail/${r.collection.id}`;
       }
     } catch (e) { toast(e.message); }
-    btn.disabled = false; btn.textContent = '存起来 🌱';
+    btn.disabled = false; btn.textContent = '存起来';
   });
   bindItems();
 }
@@ -863,6 +890,7 @@ async function reviewHomeView() {
     return { label: i === 6 ? '今天' : `${d.getMonth() + 1}/${d.getDate()}`, count: trendMap.get(key) || 0 };
   });
   const maxTrend = Math.max(1, ...trendDays.map((d) => d.count));
+  const reviewDate = todayLabel();
   const trendHtml = trendDays.map((d) => `
     <div class="review-trend-day" title="${esc(d.label)} · ${d.count} 次">
       <span>${d.count || ''}</span>
@@ -871,13 +899,13 @@ async function reviewHomeView() {
     </div>`).join('');
   const hero = due > 0
     ? `<div class="review-hero">
-        <div class="review-kicker">今日复习</div>
+        <div class="review-kicker">${reviewDate}</div>
         <div class="review-hero-title">${due} 张卡片已准备好</div>
         <div class="muted">预计 ${estimate} 分钟 · 随时可以停</div>
         <a class="btn review-start" href="#/review?start=1&total=${due}">开始复习</a>
       </div>`
     : `<div class="review-hero">
-        <div class="review-kicker done">今日已完成</div>
+        <div class="review-kicker done">${reviewDate} · 已完成</div>
         <div class="review-hero-title">现在没有待复习卡片</div>
         <div class="muted">${stats.candidate ? `有 ${stats.candidate} 张候选卡片等待确认` : '添加新内容，生成你的第一批卡片'}</div>
         <div class="row" style="gap:10px;margin-top:16px;justify-content:center">
@@ -906,7 +934,7 @@ async function reviewHomeView() {
   return `
   <div class="page-top-gap"></div>
   <div class="review-page-head">
-    <div><div class="review-date">今日复习</div><h1 class="review-daily-quote"><span class="review-daily-quote-track">${dailyQuote}</span></h1></div>
+    <div><div class="review-date">${reviewDate}</div><h1 class="review-daily-quote"><span class="review-daily-quote-track">${dailyQuote}</span></h1></div>
     <div class="review-streak" aria-label="近七天复习 ${stats.weekReviews} 次"><strong>${stats.weekReviews}</strong><span>近 7 天</span></div>
   </div>
   ${hero}

@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { db, now, daysAgoISO, parseTags } from './db.js';
-import { hashPassword, verifyPassword, createSession, destroySession, userFromSession, userFromApiToken, publicUser, ensureApiToken } from './auth.js';
+import { hashPassword, verifyPassword, createSession, createGuestUser, destroySession, userFromSession, userFromApiToken, publicUser, ensureApiToken } from './auth.js';
 import { extractUrl, detectPlatform, fetchDocument, parseHtml, parseXiaohongshu, inferType, summarizeText, generateTitle, isGenericTitle, PARSE_STATUS } from './parser.js';
 import { aiEnabled, enrichContent, answerSearch } from './ai.js';
 import { isKnowledgeType, generateCandidatesFor, createCard, listCards, setCardStatus, updateCard, reviewSession, recordReview, randomConfirmedCard, cardView } from './cards.js';
@@ -213,7 +213,7 @@ export async function processCollection(collectionId) {
           summary = enriched.summary || summary;
           meta.keyPoints = enriched.keyPoints || [];
         }
-      } catch {}
+      } catch (err) { console.error('[ai] content enrichment failed:', err.message); }
     }
     if (!meta.userType && (!type || type === '未分类')) {
       type = inferType(`${title} ${parsedText} ${summary}`);
@@ -277,6 +277,12 @@ export async function handleApi(req, res, pathname, query) {
     if (!user || !verifyPassword(String(body.password || ''), user.password_hash)) return json(res, 401, { error: '账号或密码错误' });
     setSessionCookie(res, createSession(user.id));
     return json(res, 200, { user: publicUser(user) });
+  }
+
+  if (method === 'POST' && pathname === '/api/auth/guest') {
+    const user = createGuestUser();
+    setSessionCookie(res, createSession(user.id));
+    return json(res, 200, { user: publicUser(user), guest: true });
   }
 
   if (method === 'POST' && pathname === '/api/auth/logout') {

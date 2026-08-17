@@ -28,6 +28,17 @@ export function createSession(userId) {
   return token;
 }
 
+// 为未注册用户创建独立的临时账号，沿用正常会话和数据隔离逻辑。
+export function createGuestUser() {
+  const account = `guest_${randomBytes(12).toString('hex')}`;
+  const passwordHash = hashPassword(randomBytes(24).toString('hex'));
+  const r = db.prepare(`
+    INSERT INTO users (account, nickname, password_hash, api_token, is_guest, created_at)
+    VALUES (?, ?, ?, ?, 1, ?)
+  `).run(account, '体验模式', passwordHash, null, now());
+  return db.prepare('SELECT * FROM users WHERE id = ?').get(Number(r.lastInsertRowid));
+}
+
 export function destroySession(token) {
   db.prepare('DELETE FROM sessions WHERE token = ?').run(token);
 }
@@ -47,7 +58,12 @@ export function userFromApiToken(token) {
 }
 
 export function publicUser(u) {
-  return { id: u.id, account: u.account, nickname: u.nickname || u.account };
+  return {
+    id: u.id,
+    account: u.account,
+    nickname: u.nickname || u.account,
+    isGuest: Boolean(u.is_guest),
+  };
 }
 
 export function ensureApiToken(u) {

@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
   nickname TEXT,
   password_hash TEXT NOT NULL,
   api_token TEXT UNIQUE,
+  is_guest INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -107,6 +108,7 @@ CREATE TABLE IF NOT EXISTS processing_tasks (
 
 try { db.exec("ALTER TABLE cards ADD COLUMN source TEXT DEFAULT 'ai'"); } catch {}
 try { db.exec("ALTER TABLE users ADD COLUMN prefs TEXT DEFAULT '{}'"); } catch {}
+try { db.exec("ALTER TABLE users ADD COLUMN is_guest INTEGER NOT NULL DEFAULT 0"); } catch {}
 try {
   db.exec(`
     UPDATE collections SET type = CASE type

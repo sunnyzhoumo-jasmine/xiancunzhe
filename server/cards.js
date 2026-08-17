@@ -97,7 +97,7 @@ export async function generateCandidatesFor(collection, { force = false } = {}) 
 
   let cards = [];
   if (aiEnabled()) {
-    try { cards = await generateCardsAI({ title: collection.title, summary: collection.summary, text: collection.parsed_text }); } catch { cards = []; }
+    try { cards = await generateCardsAI({ title: collection.title, summary: collection.summary, text: collection.parsed_text }); } catch (err) { console.error('[ai] card generation failed:', err.message); cards = []; }
   }
   if (!cards.length) cards = generateCardsRules({ title: collection.title, summary: collection.summary, text });
 
