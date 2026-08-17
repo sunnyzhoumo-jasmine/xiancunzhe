@@ -30,13 +30,20 @@
 
 ## 界面截图
 
-### 回顾卡片
-
-![回顾卡片页面](./docs/screenshots/review.png)
-
-### 知识详情与 AI 总结
-
-![知识详情页面](./docs/screenshots/detail.png)
+<table>
+  <tr>
+    <td><img src="./docs/screenshots/review-home.png" alt="回顾首页" width="280"></td>
+    <td><img src="./docs/screenshots/knowledge-content.png" alt="知识库内容" width="280"></td>
+  </tr>
+  <tr>
+    <td><img src="./docs/screenshots/add-content.png" alt="添加知识内容" width="280"></td>
+    <td><img src="./docs/screenshots/profile.png" alt="个人与学习洞察" width="280"></td>
+  </tr>
+  <tr>
+    <td><img src="./docs/screenshots/review-session.png" alt="单张卡片回顾" width="280"></td>
+    <td><img src="./docs/screenshots/knowledge-cards.png" alt="知识卡片管理" width="280"></td>
+  </tr>
+</table>
 
 ## 核心闭环
 
