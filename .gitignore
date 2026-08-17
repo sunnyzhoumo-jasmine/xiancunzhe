@@ -1,0 +1,10 @@
+node_modules/
+data/
+*.log
+.DS_Store
+
+data/
+.env
+.env.*
+node_modules/
+.vercel/

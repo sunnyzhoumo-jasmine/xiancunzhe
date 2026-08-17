@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>网页URL智能解析助手</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><span class="brand-dot"></span>网页URL智能解析助手</div>
+    <button class="btn-ghost" id="history-btn">历史记录</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="panel input-panel">
+    <div class="input-row">
+      <input id="url-input" class="input" placeholder="粘贴网页链接，例如 https://example.com/article" spellcheck="false">
+      <select id="mode-select" class="select">
+        <option value="summary">通用摘要</option>
+        <option value="risk">金融风险分析</option>
+        <option value="structure">结构化拆解</option>
+      </select>
+      <button class="btn-primary" id="submit-btn">开始分析</button>
+      <button class="btn-ghost" id="clear-btn">清空</button>
+    </div>
+    <div class="paste-row">
+      <textarea id="text-input" class="input textarea" placeholder="备用方案：部分网站无法抓取（需登录/反爬），可把正文粘贴到这里再分析"></textarea>
+    </div>
+    <div class="hint" id="hint"></div>
+  </section>
+
+  <section class="panel loading-panel" id="loading" style="display:none">
+    <div class="step" id="step1"><span class="spinner"></span>正在抓取网页正文…</div>
+    <div class="step" id="step2" style="display:none"><span class="spinner"></span>AI 正在分析内容…</div>
+  </section>
+
+  <section class="panel error-panel" id="error" style="display:none">
+    <b>⚠️ 分析失败</b>
+    <p id="error-msg" class="muted"></p>
+  </section>
+
+  <section class="cols" id="result" style="display:none">
+    <div class="col">
+      <div class="col-head">
+        <b>原始内容预览</b>
+        <span class="muted" id="src-info"></span>
+      </div>
+      <pre class="preview" id="content-preview"></pre>
+    </div>
+    <div class="col">
+      <div class="col-head">
+        <b>AI 分析结果</b>
+        <span class="badge-ai" id="ai-badge">规则分析</span>
+      </div>
+      <div class="result-body" id="result-body"></div>
+      <div class="result-ops">
+        <button class="btn-ghost" id="copy-btn">复制文本</button>
+        <button class="btn-ghost" id="md-btn">导出 Markdown</button>
+        <button class="btn-ghost" id="save-btn">保存到历史</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="modal-mask" id="history-modal" style="display:none">
+  <div class="modal">
+    <div class="modal-head"><b>解析历史（保存在本机浏览器）</b><button class="btn-ghost" id="modal-close">关闭</button></div>
+    <div id="history-list" class="history-list"></div>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>
